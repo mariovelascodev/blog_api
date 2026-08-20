@@ -7,7 +7,9 @@ authors = [
     { name = "Mario Velasco", email = "105537753+mariovelascodev@users.noreply.github.com" }
 ]
 requires-python = ">=3.12.10"
-dependencies = []
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+]
 
 [project.scripts]
 blog-api = "blog_api:main"
