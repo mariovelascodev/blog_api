@@ -1,8 +1,6 @@
 from fastapi import FastAPI
+from blog_api.routes import posts_routes
 
 app = FastAPI()
 
-
-@app.get("/")
-def root():
-    return "Hello World!"
+app.include_router(posts_routes.router, tags=["Posts"])
