@@ -66,19 +66,7 @@ async def create(post: CreatePost):
 async def update(id: int, post: UpdatePost):
     # Serializamos el campo tags a JSON en texto antes de pasarlo a la consulta
     tags_json = json.dumps(post.tags) if post.tags is not None else None
-    # Comprobar si el id corresponde con id del posts
-    if id != post.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El ID del post no coincide con el de la ruta",
-        )
-    # Comprobar si el post existe
-    post_update = await get_by_id(id)
-    if isinstance(post_update, dict) and "msg" in post_update:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El post que intentas actualizar no existe",
-        )
+
     try:
         conn = await get_connection()
         # Abrir y cerrar la conexión de forma segura
@@ -88,12 +76,20 @@ async def update(id: int, post: UpdatePost):
                     "UPDATE posts SET title = %s, content = %s, category = %s, tags = %s WHERE id = %s",
                     (post.title, post.content, post.category, tags_json, post.id),
                 )
+
+                if cursor.rowcount == 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="El post que quieres actualizar no existe",
+                    )
+
                 await conn.commit()
                 return {
                     "msg": "Post actualizado correctamente",
                     "post": await get_by_id(id),
                 }
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {str(e)}"
@@ -101,16 +97,6 @@ async def update(id: int, post: UpdatePost):
 
 
 async def delete(id: int):
-    """
-    # Comprobar si existe el post a borrar
-    post = await get_by_id(id)
-    if isinstance(post, dict) and "msg" in post:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El post que quieres borrar no existe",
-        )
-    """
-    # El post existe y se puede borrar
     try:
         conn = await get_connection()
         # Abrir y cerrar la conexión de forma segura
@@ -125,9 +111,11 @@ async def delete(id: int):
                     )
 
                 await conn.commit()
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {str(e)}"
         )
 
 

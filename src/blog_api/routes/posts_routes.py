@@ -21,7 +21,7 @@ async def create_post(post: CreatePost):
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK)
-async def update(id: str, post: UpdatePost):
+async def update_post(id: str, post: UpdatePost):
     return await posts_controllers.update(int(id), post)
 
 
