@@ -100,6 +100,37 @@ async def update(id: int, post: UpdatePost):
         )
 
 
+async def delete(id: int):
+    """
+    # Comprobar si existe el post a borrar
+    post = await get_by_id(id)
+    if isinstance(post, dict) and "msg" in post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El post que quieres borrar no existe",
+        )
+    """
+    # El post existe y se puede borrar
+    try:
+        conn = await get_connection()
+        # Abrir y cerrar la conexión de forma segura
+        async with conn:
+            async with conn.cursor(aio.DictCursor) as cursor:
+                await cursor.execute("DELETE FROM posts WHERE id=%s", (id,))
+
+                if cursor.rowcount == 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="El post que quieres borrar no existe",
+                    )
+
+                await conn.commit()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Error: {str(e)}"
+        )
+
+
 async def is_title_taken(cursor: aio.DictCursor, title: str) -> bool:
     # Consulta la BD para comprobar si el título ya está en uso.
     await cursor.execute(

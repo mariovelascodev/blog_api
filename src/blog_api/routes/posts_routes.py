@@ -23,3 +23,8 @@ async def create_post(post: CreatePost):
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 async def update(id: str, post: UpdatePost):
     return await posts_controllers.update(int(id), post)
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_post(id: str):
+    return await posts_controllers.delete(int(id))
