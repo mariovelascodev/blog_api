@@ -17,3 +17,11 @@ class CreatePost(BaseModel):
     content: str
     category: str
     tags: list[str]
+
+
+class UpdatePost(BaseModel):
+    id: int
+    title: str
+    content: str
+    category: str
+    tags: list[str]

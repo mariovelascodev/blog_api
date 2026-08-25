@@ -1,7 +1,7 @@
 from blog_api.db.config import get_connection
 import aiomysql as aio
 from fastapi import HTTPException, status
-from blog_api.models.posts_model import CreatePost
+from blog_api.models.posts_model import CreatePost, UpdatePost
 import json
 
 
@@ -57,6 +57,43 @@ async def create(post: CreatePost):
                 new_id = cursor.lastrowid
                 post = await get_by_id(new_id)
                 return {"msg": "Post creado correctamente", "item": post}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {str(e)}"
+        )
+
+
+async def update(id: int, post: UpdatePost):
+    # Serializamos el campo tags a JSON en texto antes de pasarlo a la consulta
+    tags_json = json.dumps(post.tags) if post.tags is not None else None
+    # Comprobar si el id corresponde con id del posts
+    if id != post.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El ID del post no coincide con el de la ruta",
+        )
+    # Comprobar si el post existe
+    post_update = await get_by_id(id)
+    if isinstance(post_update, dict) and "msg" in post_update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El post que intentas actualizar no existe",
+        )
+    try:
+        conn = await get_connection()
+        # Abrir y cerrar la conexión de forma segura
+        async with conn:
+            async with conn.cursor(aio.DictCursor) as cursor:
+                await cursor.execute(
+                    "UPDATE posts SET title = %s, content = %s, category = %s, tags = %s WHERE id = %s",
+                    (post.title, post.content, post.category, tags_json, post.id),
+                )
+                await conn.commit()
+                return {
+                    "msg": "Post actualizado correctamente",
+                    "post": await get_by_id(id),
+                }
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error: {str(e)}"
