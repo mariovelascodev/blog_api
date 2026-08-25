@@ -3,17 +3,31 @@ import aiomysql as aio
 from fastapi import HTTPException, status
 from blog_api.models.posts_model import CreatePost, UpdatePost
 import json
+from typing import Optional
 
 
-async def get_all_posts():
+async def get_all_posts(term: Optional[str] = None):
     try:
         conn = await get_connection()
         # Abrir y cerrar la conexión de forma segura
         async with conn:
             async with conn.cursor(aio.DictCursor) as cursor:
-                await cursor.execute("SELECT * FROM posts")
+                if not term:
+                    await cursor.execute("SELECT * FROM posts")
+                    post = await cursor.fetchall()
+                    return post if post else {"msg": "Posts no encontrados"}
+
+                # Preparamos el comodín %termino% para MySQL
+                search_pattern = f"%{term}%"
+
+                # Consulta con búsqueda parcial en title, content o category
+                await cursor.execute(
+                    "SELECT * FROM posts WHERE title LIKE %s OR content LIKE %s OR category LIKE %s",
+                    (search_pattern, search_pattern, search_pattern),
+                )
                 post = await cursor.fetchall()
                 return post if post else {"msg": "Posts no encontrados"}
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error: {str(e)}"

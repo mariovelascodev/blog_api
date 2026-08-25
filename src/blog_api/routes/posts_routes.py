@@ -1,4 +1,5 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Query
+from typing import Optional
 from blog_api.controllers import posts_controllers
 from blog_api.models.posts_model import CreatePost, UpdatePost
 
@@ -6,8 +7,10 @@ router = APIRouter()
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def get_all_posts():
-    return await posts_controllers.get_all_posts()
+async def get_all_posts(
+    term: Optional[str] = Query(None, description="Término de búsqueda"),
+):
+    return await posts_controllers.get_all_posts(term)
 
 
 @router.get("/{id}", status_code=status.HTTP_200_OK)
