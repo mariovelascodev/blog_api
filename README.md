@@ -1,6 +1,7 @@
 # Blog Platform API
 
 API RESTful sencilla para una plataforma de blogging construida con **FastAPI**, **MySQL** y **aiomysql**.
+
 📌 **Proyecto basado en:** [Blogging Platform API - roadmap.sh](https://roadmap.sh/projects/blogging-platform-api)
 
 ## 🚀 Características
